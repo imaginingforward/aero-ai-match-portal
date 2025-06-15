@@ -1,0 +1,142 @@
+[
+  {
+    "_id": "684e09e8ff2f6b44dd872d4d",
+    "source": "grants.gov",
+    "opportunityId": "PD-24-7789",
+    "title": "Geospace Cluster",
+    "agency": "NSF",
+    "status": "posted",
+    "datePosted": "1727323200000",
+    "closeDate": null,
+    "url": "https://www.grants.gov/search-results-detail/356536",
+    "active": true,
+    "fundingAmount": {
+      "amount": null,
+      "range": {
+        "min": null,
+        "max": null
+      },
+      "match_required": false,
+      "raw": "Award Ceiling: $"
+    },
+    "awardCeiling": "$",
+    "awardFloor": "$",
+    "additionalInformation": "General Information\nDocument Type: Grants Notice\nFunding Opportunity Number: PD-24-7789\nFunding Opportunity Title: Geospace Cluster\nOpportunity Category: Discretionary\nOpportunity Category Explanation:\nFunding Instrument Type: Grant\nCategory of Funding Activity: Science and Technology and other Research and Development\nCategory Explanation:\nExpected Number of Awards:\nAssistance Listings: 47.050 -- Geosciences\nCost Sharing or Matching Requirement: No\nVersion: Synopsis 3\nPosted Date: Sep 26, 2024\nLast Updated Date: Oct 04, 2024\nOriginal Closing Date for Applications: Proposals accepted anytime\nCurrent Closing Date for Applications: Proposals accepted anytime\nArchive Date:\nEstimated Total Program Funding:\nAward Ceiling: $\nAward Floor: $\nEligibility\nEligible Applicants: Unrestricted (i.e., open to any type of entity above), subject to any clarification in text field entitled \"Additional Information on Eligibility\"\nAdditional Information on Eligibility:\nAdditional Information\nAgency Name: U.S. National Science Foundation\nDescription: The Geospace Cluster (GC) in the Division of Atmospheric and Geospace Sciences (AGS) supports fundamental and solutions-oriented research, technology development and education related to the Earth's near-space environment.",
+    "technologies": [
+      "geo"
+    ],
+    "lastUpdated": "2025-06-14T23:46:48.595Z"
+  },
+  {
+    "_id": "684e09e8ff2f6b44dd872d4e",
+    "source": "grants.gov",
+    "opportunityId": "PD-24-7790",
+    "title": "Advanced Satellite Communications",
+    "agency": "NASA",
+    "status": "posted",
+    "datePosted": "1727323200000",
+    "closeDate": "1737323200000",
+    "url": "https://www.grants.gov/search-results-detail/356537",
+    "active": true,
+    "fundingAmount": {
+      "amount": 750000,
+      "range": {
+        "min": 500000,
+        "max": 1000000
+      },
+      "match_required": false,
+      "raw": "Award Ceiling: $1,000,000"
+    },
+    "awardCeiling": "$1,000,000",
+    "awardFloor": "$500,000",
+    "additionalInformation": "Development of advanced satellite communication systems for deep space missions. Looking for innovative approaches to improve data transmission rates and reduce latency in communications with spacecraft beyond Mars orbit.",
+    "technologies": [
+      "Communications", "Satellites", "Signal Processing"
+    ],
+    "lastUpdated": "2025-06-14T23:46:48.595Z"
+  },
+  {
+    "_id": "684e09e8ff2f6b44dd872d4f",
+    "source": "grants.gov",
+    "opportunityId": "PD-24-7791",
+    "title": "Next-Generation Propulsion Technology",
+    "agency": "Space Force",
+    "status": "posted",
+    "datePosted": "1727323200000",
+    "closeDate": "1737323200000",
+    "url": "https://www.grants.gov/search-results-detail/356538",
+    "active": true,
+    "fundingAmount": {
+      "amount": 500000,
+      "range": {
+        "min": 300000,
+        "max": 700000
+      },
+      "match_required": false,
+      "raw": "Award Ceiling: $700,000"
+    },
+    "awardCeiling": "$700,000",
+    "awardFloor": "$300,000",
+    "additionalInformation": "Research and development of efficient propulsion systems for small satellites and CubeSats. Looking for green propellant alternatives and innovative miniaturized propulsion solutions.",
+    "technologies": [
+      "Propulsion", "CubeSats", "Green Technology"
+    ],
+    "lastUpdated": "2025-06-14T23:46:48.595Z"
+  },
+  {
+    "_id": "684e09e8ff2f6b44dd872d50",
+    "source": "grants.gov",
+    "opportunityId": "PD-24-7792",
+    "title": "AI/ML Applications for Space Situational Awareness",
+    "agency": "DARPA",
+    "status": "posted",
+    "datePosted": "1727323200000",
+    "closeDate": "1737323200000",
+    "url": "https://www.grants.gov/search-results-detail/356539",
+    "active": true,
+    "fundingAmount": {
+      "amount": 1200000,
+      "range": {
+        "min": 800000,
+        "max": 1500000
+      },
+      "match_required": false,
+      "raw": "Award Ceiling: $1,500,000"
+    },
+    "awardCeiling": "$1,500,000",
+    "awardFloor": "$800,000",
+    "additionalInformation": "Developing artificial intelligence and machine learning solutions for improved space situational awareness. Seeking algorithms capable of predicting orbital debris trajectories and potential collision scenarios with higher accuracy.",
+    "technologies": [
+      "AI/ML", "Space Situational Awareness", "Orbital Mechanics"
+    ],
+    "lastUpdated": "2025-06-14T23:46:48.595Z"
+  },
+  {
+    "_id": "684e09e8ff2f6b44dd872d51",
+    "source": "grants.gov",
+    "opportunityId": "PD-24-7793",
+    "title": "Advanced Materials for Space Environment",
+    "agency": "NASA",
+    "status": "posted",
+    "datePosted": "1727323200000",
+    "closeDate": "1737323200000",
+    "url": "https://www.grants.gov/search-results-detail/356540",
+    "active": true,
+    "fundingAmount": {
+      "amount": 850000,
+      "range": {
+        "min": 600000,
+        "max": 1100000
+      },
+      "match_required": false,
+      "raw": "Award Ceiling: $1,100,000"
+    },
+    "awardCeiling": "$1,100,000",
+    "awardFloor": "$600,000",
+    "additionalInformation": "Development of novel materials capable of withstanding extreme space environments. Seeking innovations in radiation-resistant, thermal-adaptive, and lightweight materials for spacecraft construction and habitat development.",
+    "technologies": [
+      "Materials Science", "Spacecraft Design", "Radiation Protection"
+    ],
+    "lastUpdated": "2025-06-14T23:46:48.595Z"
+  }
+]

@@ -32,3 +32,39 @@ export function getAIModel(): string {
   // Default model name for display purposes only
   return 'gpt-4.1-nano';
 }
+
+/**
+ * Get the MongoDB connection string
+ */
+export function getMongoDBConnectionString(): string {
+  // @ts-ignore - import.meta.env is a Vite feature
+  if (import.meta.env && import.meta.env.VITE_MONGODB_CONNECTION_STRING) {
+    // @ts-ignore
+    return import.meta.env.VITE_MONGODB_CONNECTION_STRING;
+  }
+  return '';
+}
+
+/**
+ * Get the MongoDB database name
+ */
+export function getMongoDBDatabase(): string {
+  // @ts-ignore - import.meta.env is a Vite feature
+  if (import.meta.env && import.meta.env.VITE_MONGODB_DATABASE) {
+    // @ts-ignore
+    return import.meta.env.VITE_MONGODB_DATABASE;
+  }
+  return 'aero_match_db';
+}
+
+/**
+ * Get the MongoDB collection name
+ */
+export function getMongoDBCollection(): string {
+  // @ts-ignore - import.meta.env is a Vite feature
+  if (import.meta.env && import.meta.env.VITE_MONGODB_COLLECTION) {
+    // @ts-ignore
+    return import.meta.env.VITE_MONGODB_COLLECTION;
+  }
+  return 'opportunities';
+}

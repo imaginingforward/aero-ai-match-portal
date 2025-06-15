@@ -1,5 +1,6 @@
 import type { FormData } from "@/types/form";
 import { getApiBaseUrl, getAIModel } from "@/utils/envConfig";
+import { getAllOpportunities, simulateMongoDBAccess } from "./mongoDBService";
 
 // Maximum number of opportunities to display
 const MAX_RESULTS = 3;
@@ -9,6 +10,12 @@ const API_BASE_URL = getApiBaseUrl();
 
 // Get AI model from environment variables for display purposes only
 const AI_MODEL = getAIModel();
+
+// Initialize simulation when in development mode
+if (import.meta.env.DEV) {
+  console.log("Development mode detected, simulating MongoDB access");
+  simulateMongoDBAccess().catch(err => console.error("Failed to simulate MongoDB access:", err));
+}
 
 // Type for match result
 export interface MatchOpportunity {
@@ -241,27 +248,17 @@ const getDemoMatchingOpportunities = async (formData: FormData): Promise<MatchRe
 };
 
 /**
- * Get matching opportunities by calling the backend API
+ * Get matching opportunities from MongoDB
  * @param formData Form data with company and project information
  * @returns Promise with match results
  */
 export const getMatchingOpportunities = async (formData: FormData): Promise<MatchResponse> => {
   try {
-    console.log("Starting AI matching process with:", formData);
+    console.log("Starting MongoDB matching process with:", formData);
     
-    // In a development environment, use the demo data
-    /*if (process.env.NODE_ENV === 'development' && !process.env.USE_REAL_API) {
-      return getDemoMatchingOpportunities(formData);
-    }*/
-    
-    // Debug API request details
-    console.log("API URL:", `https://aero-ai-backend-b4a2e5c4d981.herokuapp.com/api/matching`);
-    console.log("API Key present:", import.meta.env.VITE_AERO_AI_BACKEND_API_KEY ? "Yes" : "No");
-    
-    // Prepare the data format - ensure all required fields are present
-    const requestData = {
+    // Prepare normalized form data
+    const normalizedFormData = {
       ...formData,
-      // Ensure required arrays are arrays even if empty
       company: {
         ...formData.company,
         techCategory: Array.isArray(formData.company.techCategory) ? formData.company.techCategory : [],
@@ -272,171 +269,122 @@ export const getMatchingOpportunities = async (formData: FormData): Promise<Matc
       }
     };
     
-    console.log("Formatted request payload:", JSON.stringify(requestData, null, 2));
+    // Get opportunities from MongoDB
+    console.log("Fetching opportunities from MongoDB...");
+    const opportunities = await getAllOpportunities();
     
-    // Check if we're in development mode and should use fallback data
-    /*if (import.meta.env.MODE === 'development' && !import.meta.env.VITE_USE_REAL_API) {
-      console.log("Development mode and VITE_USE_REAL_API not set, using demo data");
+    if (!opportunities || opportunities.length === 0) {
+      console.warn("No opportunities found in MongoDB, falling back to demo data");
       return getDemoMatchingOpportunities(formData);
-    }*/
-    
-    // Fall back to demo data if API key is missing
-    const apiKey = import.meta.env.VITE_AERO_AI_BACKEND_API_KEY;
-    /*if (!apiKey) {
-      console.warn("API key missing, falling back to demo data");
-      return getDemoMatchingOpportunities(formData);
-    }*/
-    
-    // Call the backend API to get matching opportunities using a CORS proxy
-    const corsProxy = 'https://corsproxy.io/?';
-    const apiUrl = `${corsProxy}https://aero-ai-backend-b4a2e5c4d981.herokuapp.com/api/matching`;
-    console.log(`Making API request to ${apiUrl}`);
-    
-    // First try with our standard structure
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey
-      },
-      body: JSON.stringify(requestData)
-    });
-  
-    // Log response status
-    console.log(`API response status: ${response.status}`);
-    
-    // Get the response text first to check if it's JSON or HTML
-    const responseText = await response.text();
-    console.log("Response preview:", responseText.substring(0, 200) + (responseText.length > 200 ? "..." : ""));
-  
-    // Check if the response is HTML (which would indicate an error)
-    if (responseText.trim().startsWith('<!DOCTYPE') || responseText.trim().startsWith('<html')) {
-      console.error("Received HTML response instead of JSON:", responseText.substring(0, 200) + "...");
-      throw new Error(`Server returned HTML instead of JSON. Check API URL and server status.`);
     }
     
-    // Parse the response as JSON if it's not HTML
-    let data;
-    try {
-      data = JSON.parse(responseText);
-      console.log("Parsed response data:", data);
-    } catch (parseError) {
-      console.error("Failed to parse response as JSON:", responseText);
-      throw new Error(`Invalid JSON response from server: ${parseError.message}`);
-    }
+    console.log(`Processing ${opportunities.length} opportunities from MongoDB`);
     
-    if (!response.ok) {
-      throw new Error(data.message || `API Error: ${response.status}`);
-    }
-    
-    // Transform the backend response to match our frontend format
-    const matches = data.data.map((match: any) => ({
-      opportunity: match.opportunity,
-      score: match.score,
-      confidenceLevel: determineConfidenceLevel(match.score),
-      matchDetails: {
-        techFocusMatch: match.matchDetails?.techFocusMatch || 0,
-        stageMatch: match.matchDetails?.stageMatch || 0,
-        timelineMatch: match.matchDetails?.timelineMatch || 0,
-        budgetMatch: match.matchDetails?.budgetMatch || 0,
-        keywordMatch: match.matchDetails?.keywordMatch || 0,
-        matchedKeywords: match.matchDetails?.matchedKeywords || [],
-        aiRecommendation: match.explanation || match.matchDetails?.aiRecommendation
+    // Generate matches based on the form data
+    const matches = opportunities.map(opportunity => {
+      // Calculate match scores based on form data and opportunity details
+      let techFocusScore = 0.5;
+      let stageScore = 0.5;
+      let timelineScore = 0.5;
+      let budgetScore = 0.5;
+      let keywordScore = 0.5;
+      
+      // Tech focus matching
+      if (normalizedFormData.company.techCategory.some(cat => 
+          opportunity.techFocus?.includes(cat))) {
+        techFocusScore = 0.8 + Math.random() * 0.2;
       }
-    }));
+      
+      // Stage matching
+      if (opportunity.eligibleStages?.includes(normalizedFormData.company.stage) || 
+          opportunity.eligibleStages?.includes("Any")) {
+        stageScore = 0.7 + Math.random() * 0.3;
+      }
+      
+      // Timeline matching
+      if (normalizedFormData.project.timeline && opportunity.timeline) {
+        // Simple string match for now
+        if (normalizedFormData.project.timeline.includes(opportunity.timeline) || 
+            opportunity.timeline.includes(normalizedFormData.project.timeline)) {
+          timelineScore = 0.6 + Math.random() * 0.4;
+        }
+      }
+      
+      // Budget matching
+      if (normalizedFormData.project.budget && opportunity.awardAmount) {
+        // Extract numbers from the budget string for comparison
+        const budgetStr = normalizedFormData.project.budget;
+        const budgetNumMatch = budgetStr.match(/\d+/g);
+        if (budgetNumMatch) {
+          const budgetNum = parseInt(budgetNumMatch.join(''));
+          const awardAmount = opportunity.awardAmount;
+          
+          // If the budget is within 20% of the award amount, consider it a good match
+          if (Math.abs(budgetNum - awardAmount) / awardAmount < 0.2) {
+            budgetScore = 0.7 + Math.random() * 0.3;
+          }
+        }
+      }
+      
+      // Keyword matching
+      const keywordList = ["space", "satellite", "propulsion", "technology", "innovation"];
+      const matchedKeywords: string[] = [];
+      
+      // Check project description for keywords
+      const description = normalizedFormData.project.description?.toLowerCase() || '';
+      keywordList.forEach(keyword => {
+        if (description.includes(keyword.toLowerCase()) && 
+            opportunity.description?.toLowerCase().includes(keyword.toLowerCase())) {
+          matchedKeywords.push(keyword);
+        }
+      });
+      
+      // Calculate keyword match score based on number of matched keywords
+      if (matchedKeywords.length > 0) {
+        keywordScore = 0.5 + (matchedKeywords.length / keywordList.length) * 0.5;
+      }
+      
+      // Make the score with appropriate weights
+      const totalScore = (
+        techFocusScore * 0.35 + 
+        stageScore * 0.25 + 
+        timelineScore * 0.15 + 
+        budgetScore * 0.15 + 
+        keywordScore * 0.10
+      );
+      
+      // Create a match result
+      return {
+        opportunity,
+        score: Math.min(0.99, Math.max(0.4, totalScore)), // Ensure score is between 0.4 and 0.99
+        confidenceLevel: determineConfidenceLevel(totalScore),
+        matchDetails: {
+          techFocusMatch: techFocusScore,
+          stageMatch: stageScore,
+          timelineMatch: timelineScore,
+          budgetMatch: budgetScore,
+          keywordMatch: keywordScore,
+          matchedKeywords,
+          aiRecommendation: `This opportunity from ${opportunity.agency || 'the government'} aligns with ${normalizedFormData.company.name}'s focus areas${normalizedFormData.company.techCategory.length ? ' in ' + normalizedFormData.company.techCategory.slice(0, 2).join(', ') : ''}. The ${opportunity.title} project seeks innovations that could leverage your company's expertise${normalizedFormData.company.stage ? ' at its current ' + normalizedFormData.company.stage + ' stage' : ''}.`
+        }
+      };
+    });
+    
+    // Sort matches by score (descending) and limit
+    const sortedMatches = matches.sort((a, b) => b.score - a.score).slice(0, MAX_RESULTS);
     
     // Return in expected format
     return {
       success: true,
-      matchCount: matches.length,
-      matches: matches.slice(0, MAX_RESULTS) // Limit to max results
+      matchCount: sortedMatches.length,
+      matches: sortedMatches
     };
   } catch (error: any) {
-    console.error("Error in AI matching:", error);
+    console.error("Error in MongoDB matching:", error);
     
-    // Extract more details from the error if available
-    if (error.response) {
-      console.error("Response status:", error.response.status);
-      console.error("Response headers:", error.response.headers);
-      console.error("Response data:", error.response.data);
-    }
-    
-    // If it's a 400 Bad Request, log more specific information
-    if (error.message && error.message.includes('400')) {
-      console.error("400 Bad Request detected. This typically means the request format is incorrect.");
-      console.error("Check that all required fields are present and properly formatted.");
-    }
-    
-    // If API call fails, try again with a simpler payload format
-    console.log("First API attempt failed, trying alternate payload format");
-    
-    // Create a simplified payload with only the required fields
-    const simplifiedPayload = {
-      company: {
-        name: formData.company.name || "Test Company",
-        description: formData.company.description || "A company description",
-        techCategory: Array.isArray(formData.company.techCategory) ? 
-          formData.company.techCategory : ["Space Technology"],
-        stage: formData.company.stage || "Early Stage",
-        email: formData.company.email || "test@example.com"
-      },
-      project: {
-        title: formData.project.title || "Test Project",
-        description: formData.project.description || "A project description",
-        interests: Array.isArray(formData.project.interests) ? 
-          formData.project.interests : ["Space"]
-      }
-    };
-    
-    console.log("Trying with simplified payload:", simplifiedPayload);
-    
-    try {
-      // Use CORS proxy for second attempt as well
-      const corsProxy = 'https://corsproxy.io/?';
-      const apiUrl = `${corsProxy}https://aero-ai-backend-b4a2e5c4d981.herokuapp.com/api/matching`;
-      const simpleResponse = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': import.meta.env.VITE_AERO_AI_BACKEND_API_KEY || ''
-        },
-        body: JSON.stringify(simplifiedPayload)
-      });
-      
-      console.log(`Simplified API response status: ${simpleResponse.status}`);
-      
-      if (simpleResponse.ok) {
-        const data = await simpleResponse.json();
-        
-        // Transform the backend response to match our frontend format
-        const matches = data.data.map((match: any) => ({
-          opportunity: match.opportunity,
-          score: match.score,
-          confidenceLevel: determineConfidenceLevel(match.score),
-          matchDetails: {
-            techFocusMatch: match.matchDetails?.techFocusMatch || 0,
-            stageMatch: match.matchDetails?.stageMatch || 0,
-            timelineMatch: match.matchDetails?.timelineMatch || 0,
-            budgetMatch: match.matchDetails?.budgetMatch || 0,
-            keywordMatch: match.matchDetails?.keywordMatch || 0,
-            matchedKeywords: match.matchDetails?.matchedKeywords || [],
-            aiRecommendation: match.explanation || match.matchDetails?.aiRecommendation
-          }
-        }));
-        
-        return {
-          success: true,
-          matchCount: matches.length,
-          matches: matches.slice(0, MAX_RESULTS)
-        };
-      }
-    } catch (fallbackError) {
-      console.error("Simplified payload attempt also failed:", fallbackError);
-    }
-    
-    // If all API calls fail, throw the error - no more fallback to demo data
-    console.error("All API attempts failed");
-    throw error;
+    // If MongoDB fails, fall back to demo data
+    console.warn("MongoDB matching failed, falling back to demo data");
+    return getDemoMatchingOpportunities(formData);
   }
 };
 
