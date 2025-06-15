@@ -35,9 +35,14 @@ export async function getAllOpportunities(): Promise<MatchOpportunity[]> {
       console.log('Development mode detected, using test data');
       rawOpportunities = await simulateMongoDBAccess();
     } else {
-      // In production, fetch from the API
-      console.log('Production mode, fetching from API');
-      const apiUrl = `https://aero-ai-match-portal.netlify.app/.netlify/functions/get-opportunities`;
+      // In production, fetch from the API through a CORS proxy
+      console.log('Production mode, fetching from API via CORS proxy');
+      // Using corsproxy.io to bypass CORS restrictions
+      const corsProxy = 'https://corsproxy.io/?';
+      const targetUrl = 'https://aero-ai-match-portal.netlify.app/.netlify/functions/get-opportunities';
+      const apiUrl = `${corsProxy}${encodeURIComponent(targetUrl)}`;
+      
+      console.log('Requesting from:', apiUrl);
       const response = await fetch(apiUrl);
       rawOpportunities = await response.json();
     }
