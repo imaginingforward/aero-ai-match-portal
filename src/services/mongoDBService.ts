@@ -1,21 +1,16 @@
 /**
  * MongoDB Service for accessing opportunities data
- * This service uses environment variables to connect to MongoDB
- * via a data API instead of direct connection
+ * This service connects to our backend API instead of connecting directly to MongoDB
  */
 
-import { 
-  getMongoDBConnectionString, 
-  getMongoDBDatabase, 
-  getMongoDBCollection 
-} from '@/utils/envConfig';
+import { getApiBaseUrl } from '@/utils/envConfig';
 import type { MatchOpportunity } from './matchingService';
 
 // Cache the data to avoid unnecessary API calls
 let cachedOpportunities: MatchOpportunity[] | null = null;
 
 /**
- * Get all opportunities from MongoDB via Data API
+ * Get all opportunities from our backend API
  * @returns Promise that resolves to an array of opportunities
  */
 export async function getAllOpportunities(): Promise<MatchOpportunity[]> {
@@ -30,21 +25,45 @@ export async function getAllOpportunities(): Promise<MatchOpportunity[]> {
     
     let rawOpportunities;
     
-    // In development mode, use the test data
-    if (import.meta.env.DEV) {
-      console.log('Development mode detected, using test data');
-      rawOpportunities = await simulateMongoDBAccess();
-    } else {
-      // In production, fetch from the API through a CORS proxy
-      console.log('Production mode, fetching from API via CORS proxy');
-      // Using corsproxy.io to bypass CORS restrictions
-      const corsProxy = 'https://corsproxy.io/?';
-      const targetUrl = 'https://aero-ai-match-portal.netlify.app/.netlify/functions/get-opportunities';
-      const apiUrl = `${corsProxy}${encodeURIComponent(targetUrl)}`;
+    try {
+      // Get opportunities from our backend API
+      console.log('Connecting to backend API...');
       
-      console.log('Requesting from:', apiUrl);
+      const apiBaseUrl = getApiBaseUrl() || 'http://localhost:3000';
+      const apiUrl = `${apiBaseUrl}/api/opportunities?limit=50`;
+      
+      console.log('Requesting from API:', apiUrl);
+      
+      // Make the request to our API
       const response = await fetch(apiUrl);
-      rawOpportunities = await response.json();
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('API error:', response.status, errorText);
+        throw new Error(`API error: ${response.status}`);
+      }
+      
+      const responseData = await response.json();
+      
+      // Check if the response has the expected format
+      if (!responseData.success || !responseData.data) {
+        console.error('Invalid API response format:', responseData);
+        throw new Error('Invalid API response format');
+      }
+      
+      rawOpportunities = responseData.data;
+      
+      if (!rawOpportunities || rawOpportunities.length === 0) {
+        console.warn('No opportunities found in API response');
+        throw new Error('No opportunities found in API response');
+      }
+      
+      console.log(`Successfully retrieved ${rawOpportunities.length} opportunities from API`);
+    } catch (error) {
+      // Fallback to test data if there was an error with the API
+      console.error('Error fetching from API:', error);
+      console.warn('Falling back to test data due to API error');
+      rawOpportunities = await simulateMongoDBAccess();
     }
 
     if (!Array.isArray(rawOpportunities)) {
@@ -118,23 +137,13 @@ export function clearCache(): void {
 }
 
 /**
- * Simulate direct access to MongoDB for development
- * This will be replaced by the serverless function in production
+ * Provide test data for development and as fallback when API is unavailable
  */
 export async function simulateMongoDBAccess(): Promise<any[]> {
   try {
-    const connectionString = getMongoDBConnectionString();
-    const dbName = getMongoDBDatabase();
-    const collectionName = getMongoDBCollection();
+    console.log('Using test data as fallback');
     
-    console.log('MongoDB Connection Info:', {
-      connectionString: connectionString ? 'Set' : 'Not set',
-      dbName,
-      collectionName
-    });
-
-    // Instead of using require, we'll use fetch to load the JSON data
-    // This works better in the browser environment
+    // Use hardcoded test data for development and fallback
     const testData = [
       {
         "_id": "684e09e8ff2f6b44dd872d4d",
